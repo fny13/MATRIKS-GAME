@@ -1,0 +1,310 @@
+<!DOCTYPE html>  
+<html lang="id">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Matrix Challenge Game</title>  
+    <script src="https://cdn.tailwindcss.com"></script>  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">  
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>  
+    <style>  
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');  
+        body {  
+            font-family: 'Poppins', sans-serif;  
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);  
+            min-height: 100vh;  
+            color: #f8fafc;  
+        }  
+        .glass {  
+            background: rgba(255, 255, 255, 0.05);  
+            backdrop-filter: blur(12px);  
+            border: 1px solid rgba(255, 255, 255, 0.1);  
+        }  
+    </style>  
+</head>  
+<body class="flex items-center justify-center p-4">  
+  
+    <div class="w-full max-w-2xl glass rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">  
+          
+        <!-- START SCREEN -->  
+        <div id="start-screen" class="text-center py-8">  
+            <div class="inline-block p-4 rounded-full bg-indigo-600/20 text-indigo-400 mb-4">  
+                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">  
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>  
+                </svg>  
+            </div>  
+            <h1 class="text-3xl md:text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400">  
+                Matrix Master Challenge  
+            </h1>  
+            <p class="text-slate-300 mb-6 max-w-md mx-auto">  
+                Uji pemahaman matriks kamu! Selesaikan soal penjumlahan, determinan, hingga invers sebelum waktu habis.  
+            </p>  
+            <div class="flex justify-center gap-4 mb-8">  
+                <div class="bg-slate-800/60 px-4 py-2 rounded-xl text-sm border border-slate-700">⏱️ 30 Detik/Soal</div>  
+                <div class="bg-slate-800/60 px-4 py-2 rounded-xl text-sm border border-slate-700">❤️️ 3 Nyawa</div>  
+            </div>  
+            <button onclick="startGame()" class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg transition transform hover:-translate-y-0.5">  
+                Mulai Permainan 🚀  
+            </button>  
+        </div>  
+  
+        <!-- GAME SCREEN -->  
+        <div id="game-screen" class="hidden">  
+            <!-- HUD -->  
+            <div class="flex justify-between items-center mb-6 bg-slate-900/50 p-4 rounded-2xl border border-slate-800">  
+                <div>  
+                    <span class="text-xs text-slate-400 block uppercase tracking-wider">Skor</span>  
+                    <span id="score-text" class="text-2xl font-bold text-amber-400">0</span>  
+                </div>  
+                <div class="text-center">  
+                    <span class="text-xs text-slate-400 block uppercase tracking-wider">Waktu</span>  
+                    <span id="timer-text" class="text-2xl font-bold text-indigo-400">30</span>  
+                </div>  
+                <div class="text-right">  
+                    <span class="text-xs text-slate-400 block uppercase tracking-wider">Nyawa</span>  
+                    <div id="lives-container" class="text-xl">❤️❤️️❤️</div>  
+                </div>  
+            </div>  
+  
+            <!-- QUESTION AREA -->  
+            <div class="mb-6 text-center bg-slate-800/40 p-6 rounded-2xl border border-slate-700/50">  
+                <span id="topic-badge" class="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs rounded-full mb-3 border border-indigo-500/30">Topik</span>  
+                <h2 id="question-text" class="text-lg md:text-xl font-medium mb-4">Hitunglah matriks berikut:</h2>  
+                <div id="math-container" class="text-xl md:text-2xl py-2 my-2 overflow-x-auto min-h-[80px] flex items-center justify-center"></div>  
+            </div>  
+  
+            <!-- OPTIONS -->  
+            <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">  
+                <!-- Buttons injected by JS -->  
+            </div>  
+  
+            <!-- FEEDBACK / RATIONALE -->  
+            <div id="feedback-area" class="hidden p-4 rounded-xl text-center text-sm font-medium"></div>  
+        </div>  
+  
+        <!-- END SCREEN -->  
+        <div id="end-screen" class="hidden text-center py-8">  
+            <h2 class="text-3xl font-bold mb-2">Permainan Selesai! 🎉</h2>  
+            <p class="text-slate-300 mb-6">Berikut adalah pencapaian kamu:</p>  
+              
+            <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 max-w-sm mx-auto mb-6">  
+                <div class="text-slate-400 text-sm mb-1">Total Skor</div>  
+                <div id="final-score" class="text-4xl font-extrabold text-amber-400 mb-4">0</div>  
+                <div id="performance-msg" class="text-sm text-indigo-300 border-t border-slate-800 pt-3">  
+                    Bagus sekali!  
+                </div>  
+            </div>  
+  
+            <button onclick="startGame()" class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg transition">  
+                Coba Lagi 🔄  
+            </button>  
+        </div>  
+  
+    </div>  
+  
+    <script>  
+        let score = 0;  
+        let lives = 3;  
+        let timer = 30;  
+        let timerInterval;  
+        let currentQuestion = null;  
+        let isAnswering = false;  
+  
+        function randInt(min, max) {  
+            return Math.floor(Math.random() * (max - min + 1)) + min;  
+        }  
+  
+        // Generator Soal Matriks  
+        function generateQuestion() {  
+            const types = ['add', 'sub', 'scalar', 'det', 'mul'];  
+            const type = types[randInt(0, types.length - 1)];  
+  
+            if (type === 'add') {  
+                const a = [randInt(1,5), randInt(1,5), randInt(1,5), randInt(1,5)];  
+                const b = [randInt(1,5), randInt(1,5), randInt(1,5), randInt(1,5)];  
+                const ans = [a[0]+b[0], a[1]+b[1], a[2]+b[2], a[3]+b[3]];  
+                return {  
+                    topic: "Penjumlahan Matriks",  
+                    latex: `\\begin{pmatrix} ${a[0]} & ${a[1]} \\\\ ${a[2]} & ${a[3]} \\end{pmatrix} + \\begin{pmatrix} ${b[0]} & ${b[1]} \\\\ ${b[2]} & ${b[3]} \\end{pmatrix} = ?`,  
+                    correct: `\\begin{pmatrix} ${ans[0]} & ${ans[1]} \\\\ ${ans[2]} & ${ans[3]} \\end{pmatrix}`,  
+                    options: [  
+                        `\\begin{pmatrix} ${ans[0]} & ${ans[1]} \\\\ ${ans[2]} & ${ans[3]} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${ans[0]+1} & ${ans[1]} \\\\ ${ans[2]} & ${ans[3]-1} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${a[0]*b[0]} & ${a[1]*b[1]} \\\\ ${a[2]*b[2]} & ${a[3]*b[3]} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${ans[0]} & ${ans[1]-1} \\\\ ${ans[2]+2} & ${ans[3]} \\end{pmatrix}`  
+                    ]  
+                };  
+            } else if (type === 'sub') {  
+                const a = [randInt(3,8), randInt(3,8), randInt(3,8), randInt(3,8)];  
+                const b = [randInt(1,3), randInt(1,3), randInt(1,3), randInt(1,3)];  
+                const ans = [a[0]-b[0], a[1]-b[1], a[2]-b[2], a[3]-b[3]];  
+                return {  
+                    topic: "Pengurangan Matriks",  
+                    latex: `\\begin{pmatrix} ${a[0]} & ${a[1]} \\\\ ${a[2]} & ${a[3]} \\end{pmatrix} - \\begin{pmatrix} ${b[0]} & ${b[1]} \\\\ ${b[2]} & ${b[3]} \\end{pmatrix} = ?`,  
+                    correct: `\\begin{pmatrix} ${ans[0]} & ${ans[1]} \\\\ ${ans[2]} & ${ans[3]} \\end{pmatrix}`,  
+                    options: [  
+                        `\\begin{pmatrix} ${ans[0]} & ${ans[1]} \\\\ ${ans[2]} & ${ans[3]} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${ans[0]+1} & ${ans[1]} \\\\ ${ans[2]-1} & ${ans[3]} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${a[0]+b[0]} & ${a[1]+b[1]} \\\\ ${a[2]+b[2]} & ${a[3]+b[3]} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${ans[0]} & ${ans[1]+2} \\\\ ${ans[2]} & ${ans[3]-1} \\end{pmatrix}`  
+                    ]  
+                };  
+            } else if (type === 'scalar') {  
+                const k = randInt(2, 4);  
+                const a = [randInt(1,4), randInt(1,4), randInt(1,4), randInt(1,4)];  
+                const ans = [k*a[0], k*a[1], k*a[2], k*a[3]];  
+                return {  
+                    topic: "Perkalian Skalar",  
+                    latex: `${k} \\cdot \\begin{pmatrix} ${a[0]} & ${a[1]} \\\\ ${a[2]} & ${a[3]} \\end{pmatrix} = ?`,  
+                    correct: `\\begin{pmatrix} ${ans[0]} & ${ans[1]} \\\\ ${ans[2]} & ${ans[3]} \\end{pmatrix}`,  
+                    options: [  
+                        `\\begin{pmatrix} ${ans[0]} & ${ans[1]} \\\\ ${ans[2]} & ${ans[3]} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${a[0]+k} & ${a[1]+k} \\\\ ${a[2]+k} & ${a[3]+k} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${ans[0]} & ${a[1]} \\\\ ${a[2]} & ${ans[3]} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${ans[0]-1} & ${ans[1]} \\\\ ${ans[2]} & ${ans[3]+1} \\end{pmatrix}`  
+                    ]  
+                };  
+            } else if (type === 'det') {  
+                const a = randInt(1, 5);  
+                const b = randInt(1, 5);  
+                const c = randInt(1, 5);  
+                const d = randInt(1, 5);  
+                const det = (a * d) - (b * c);  
+                return {  
+                    topic: "Determinan Matriks 2x2",  
+                    latex: `\\text{Determinan dari } \\begin{pmatrix} ${a} & ${b} \\\\ ${c} & ${d} \\end{pmatrix} = ?`,  
+                    correct: `${det}`,  
+                    options: [  
+                        `${det}`,  
+                        `${(a * d) + (b * c)}`,  
+                        `${(a * c) - (b * d)}`,  
+                        `${det + randInt(1, 3)}`  
+                    ]  
+                };  
+            } else {  
+                // Perkalian  
+                const a = [randInt(1,3), randInt(0,2), randInt(1,2), randInt(1,3)];  
+                const b = [randInt(1,3), randInt(1,2), randInt(0,2), randInt(1,3)];  
+                const c11 = a[0]*b[0] + a[1]*b[2];  
+                const c12 = a[0]*b[1] + a[1]*b[3];  
+                const c21 = a[2]*b[0] + a[3]*b[2];  
+                const c22 = a[2]*b[1] + a[3]*b[3];  
+                return {  
+                    topic: "Perkalian Matriks 2x2",  
+                    latex: `\\begin{pmatrix} ${a[0]} & ${a[1]} \\\\ ${a[2]} & ${a[3]} \\end{pmatrix} \\cdot \\begin{pmatrix} ${b[0]} & ${b[1]} \\\\ ${b[2]} & ${b[3]} \\end{pmatrix} = ?`,  
+                    correct: `\\begin{pmatrix} ${c11} & ${c12} \\\\ ${c21} & ${c22} \\end{pmatrix}`,  
+                    options: [  
+                        `\\begin{pmatrix} ${c11} & ${c12} \\\\ ${c21} & ${c22} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${a[0]*b[0]} & ${a[1]*b[1]} \\\\ ${a[2]*b[2]} & ${a[3]*b[3]} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${c11+1} & ${c12} \\\\ ${c21} & ${c22-1} \\end{pmatrix}`,  
+                        `\\begin{pmatrix} ${c12} & ${c11} \\\\ ${c22} & ${c21} \\end{pmatrix}`  
+                    ]  
+                };  
+            }  
+        }  
+  
+        function shuffle(array) {  
+            return array.sort(() => Math.random() - 0.5);  
+        }  
+  
+        function startGame() {  
+            score = 0;  
+            lives = 3;  
+            document.getElementById('start-screen').classList.add('hidden');  
+            document.getElementById('end-screen').classList.add('hidden');  
+            document.getElementById('game-screen').classList.remove('hidden');  
+            updateHUD();  
+            nextQuestion();  
+        }  
+  
+        function updateHUD() {  
+            document.getElementById('score-text').innerText = score;  
+            document.getElementById('lives-container').innerText = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);  
+        }  
+  
+        function startTimer() {  
+            clearInterval(timerInterval);  
+            timer = 30;  
+            document.getElementById('timer-text').innerText = timer;  
+            timerInterval = setInterval(() => {  
+                timer--;  
+                document.getElementById('timer-text').innerText = timer;  
+                if (timer <= 0) {  
+                    clearInterval(timerInterval);  
+                    handleAnswer(null, false);  
+                }  
+            }, 1000);  
+        }  
+  
+        function nextQuestion() {  
+            isAnswering = false;  
+            document.getElementById('feedback-area').classList.add('hidden');  
+            currentQuestion = generateQuestion();  
+              
+            document.getElementById('topic-badge').innerText = currentQuestion.topic;  
+            katex.render(currentQuestion.latex, document.getElementById('math-container'), { throwOnError: false, displayMode: true });  
+  
+            const optionsGrid = document.getElementById('options-grid');  
+            optionsGrid.innerHTML = '';  
+  
+            const shuffledOptions = shuffle([...currentQuestion.options]);  
+  
+            shuffledOptions.forEach((opt) => {  
+                const btn = document.createElement('button');  
+                btn.className = "p-4 bg-slate-800/80 hover:bg-indigo-600/30 border border-slate-700/80 hover:border-indigo-500 rounded-xl flex items-center justify-center transition min-h-[60px]";  
+                  
+                const span = document.createElement('span');  
+                katex.render(opt, span, { throwOnError: false });  
+                btn.appendChild(span);  
+  
+                btn.onclick = () => {  
+                    if (!isAnswering) handleAnswer(opt, opt === currentQuestion.correct);  
+                };  
+                optionsGrid.appendChild(btn);  
+            });  
+  
+            startTimer();  
+        }  
+  
+        function handleAnswer(selectedOpt, isCorrect) {  
+            isAnswering = true;  
+            clearInterval(timerInterval);  
+  
+            const feedback = document.getElementById('feedback-area');  
+            feedback.classList.remove('hidden', 'bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40', 'bg-rose-500/20', 'text-rose-300', 'border-rose-500/40');  
+  
+            if (isCorrect) {  
+                score += 10 + Math.floor(timer / 3);  
+                feedback.classList.add('bg-emerald-500/20', 'text-emerald-300', 'border', 'border-emerald-500/40');  
+                feedback.innerText = "Benar! Bagus sekali 🎉";  
+            } else {  
+                lives--;  
+                feedback.classList.add('bg-rose-500/20', 'text-rose-300', 'border', 'border-rose-500/40');  
+                feedback.innerText = selectedOpt === null ? "Waktu Habis! ⏰" : "Kurang tepat! ❌";  
+            }  
+  
+            updateHUD();  
+  
+            setTimeout(() => {  
+                if (lives > 0) {  
+                    nextQuestion();  
+                } else {  
+                    endGame();  
+                }  
+            }, 1200);  
+        }  
+  
+        function endGame() {  
+            document.getElementById('game-screen').classList.add('hidden');  
+            document.getElementById('end-screen').classList.remove('hidden');  
+            document.getElementById('final-score').innerText = score;  
+  
+            let msg = "Tetap semangat dan terus berlatih!";  
+            if (score > 100) msg = "Luar biasa! Kamu seorang pakar Matriks! 🌟";  
+            else if (score > 50) msg = "Kerja bagus! Pemahaman matriks kamu sudah mantap! 👍";  
+  
+            document.getElementById('performance-msg').innerText = msg;  
+        }  
+    </script>  
+</body>  
+</html>  
